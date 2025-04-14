@@ -1,24 +1,48 @@
 #!/bin/bash
 
+# ─── Versionsparameter prüfen ───────────────────────────────────────────
+KERNEL_VERSION="$1"
+if [ -z "$KERNEL_VERSION" ]; then
+    echo "Bitte gib die Kernel-Version an, z. B.:"
+    echo "   $0 6.14"
+    exit 1
+fi
+
+KERNEL_MAJOR="${KERNEL_VERSION%%.*}"
+KERNEL_DIR="linux-$KERNEL_VERSION"
+KERNEL_URL="https://www.kernel.org/pub/linux/kernel/v$KERNEL_MAJOR.x"
+
+export KERNEL_VERSION
+export KERNEL_DIR
+
 
 echo "1. Tools herunterladen"
 sudo apt install -y libncurses-dev qemu-system-x86 uml-utilities libssl-dev libelf-dev vim flex bison
-# mkdir -p embedded/qemu
-# cd       embedded/qemu || { echo "Fehler beim Verzeichniswechsel"; exit 1; }
+# cd "$(dirname "$(readlink -f "$0")")" || { echo "Fehler beim Wechsel ins Skriptverzeichnis"; exit 1; }
 
 echo "2. Linux Kernel herunterladen"
-gpg  --locate-keys torvalds@kernel.org gregkh@kernel.org
-wget https://www.kernel.org/pub/linux/kernel/v6.x/linux-6.14.tar.xz
-wget https://www.kernel.org/pub/linux/kernel/v6.x/linux-6.14.tar.sign
+if [ ! -d "$KERNEL_DIR" ] && { [ ! -f "$KERNEL_DIR.tar" ] || [ ! -f "$KERNEL_DIR.tar.sign" ]; }; then
+    gpg --locate-keys torvalds@kernel.org gregkh@kernel.org
+    wget "$KERNEL_URL/$KERNEL_DIR.tar.xz" || { echo "Fehler beim Download des Kernel-Archivs"; exit 1; }
+    wget "$KERNEL_URL/$KERNEL_DIR.tar.sign" || { echo "Fehler beim Download der Kernel-Signatur"; exit 1; }
+    xz -d "$KERNEL_DIR.tar.xz"  || { echo "Fehler beim Entpacken des Kernel-Archivs"; exit 1; }
+else
+    echo "Kernelarchiv oder entpackter Kernel bereits vorhanden – Überspringe Download."
+fi
 
 echo "3. Linux Kernel entpacken"
-xz  -d linux-6.14.tar.xz
-gpg --verify linux-6.14.tar.sign
-tar xf linux-6.14.tar
-cd  linux-6.14 || { echo "Fehler beim Verzeichniswechsel"; exit 1; }
+if [ ! -d "$KERNEL_DIR" ]; then
+    gpg --verify "$KERNEL_DIR.tar.sign" || { echo "Fehler bei der Verifizierung des Kernel-Archivs"; exit 1; }
+    tar xf "$KERNEL_DIR.tar" || { echo "Fehler beim Entpacken des Kernel-Tarballs"; exit 1; }
+    # rm "$KERNEL_DIR.tar"
+    # rm "$KERNEL_DIR.tar.sign"
+else
+    echo "Kernel bereits entpackt – Überspringe Entpacken."
+fi
 
 echo "4. Kernel Minimalkonfiguration"
-make ARCH=x86_64 allnoconfig
+cd "$KERNEL_DIR"
+make ARCH=x86_64 allnoconfig || { echo "Fehler bei der Minimalkonfiguration des Kernels"; exit 1; }
 
 echo "5. Kernel features aktivieren"
 # ─── Allgemeine Optionen ────────────────────────────────────────────────
@@ -53,13 +77,8 @@ scripts/config --enable CONFIG_EXT4_FS                 # ext4
 scripts/config --enable CONFIG_TMPFS                   # tmpfs
 
 echo "6. Kernel builden"
-make olddefconfig
+make olddefconfig || { echo "Fehler beim Erstellen der alten Konfiguration"; exit 1; }
 CORES=$(nproc)
-make -j"$CORES" bzImage
-cd ..
+make -j"$CORES" bzImage || { echo "Fehler beim Bauen des Kernels"; exit 1; }
 
-echo "7. Skripte verschieben"
-# cp ../../getbusybox.sh ./ || { echo "Fehler beim Verschieben von getbusybox.sh"; exit 1; }
-# cp ../../mkrootfs.sh   ./ || { echo "Fehler beim Verschieben von mkrootfs.sh";   exit 1; }
-
-echo "Kernel erfolgreich gebaut und Skripte verschoben!"
+echo "Linux Kernel $KERNEL_VERSION erfolgreich heruntergeladen und gebaut!"
