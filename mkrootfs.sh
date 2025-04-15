@@ -15,6 +15,7 @@ sudo rsync -a busybox-1.37.0/_install/ rootfs/
 echo "3. Filesystem vorbereiten"
 cd rootfs
 mkdir dev etc proc sys
+mkdir -p var/www/
 
 echo "4. Geräte erstellen"
 sudo mknod dev/null c 1 3
@@ -24,6 +25,11 @@ sudo mknod dev/console c 5 1
 echo "5. Initskript einbauen"
 # install -m 0755 ~/embedded/qemu/userland/target/prepuserland.sh ~/embedded/qemu/userland/rootfs/bin/
 cd .. || { echo "Fehler beim Verzeichniswechsel"; exit 1; }
+install -m 0755 target/rc.local rootfs/bin/
+install -m 0755 target/profile rootfs/etc/
+install -m 0644 target/httpd.conf rootfs/etc/
+install -m 0644 target/index.html rootfs/var/www/
+install -m 0755 target/ps.cgi rootfs/var/www/
 sudo chown -R root:root rootfs
 
 echo "6. Rootfs image unmounten"

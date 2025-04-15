@@ -1,0 +1,7 @@
+#!/bin/ash
+
+mount -t proc proc /proc
+mount -t sysfs sysfs /sys
+
+ifconfig eth0 10.69.0.99 netmask 255.255.255.0
+httpd
