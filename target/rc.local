@@ -3,5 +3,7 @@
 mount -t proc proc /proc
 mount -t sysfs sysfs /sys
 
+loadkmap < /etc/de-latin1.bmap
+
 ifconfig eth0 10.69.0.99 netmask 255.255.255.0
 httpd

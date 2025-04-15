@@ -23,13 +23,13 @@ sudo mknod dev/tty1 c 4 1
 sudo mknod dev/console c 5 1
 
 echo "5. Initskript einbauen"
-# install -m 0755 ~/embedded/qemu/userland/target/prepuserland.sh ~/embedded/qemu/userland/rootfs/bin/
 cd .. || { echo "Fehler beim Verzeichniswechsel"; exit 1; }
 install -m 0755 target/rc.local rootfs/bin/
 install -m 0755 target/profile rootfs/etc/
 install -m 0644 target/httpd.conf rootfs/etc/
 install -m 0644 target/index.html rootfs/var/www/
 install -m 0755 target/ps.cgi rootfs/var/www/
+install -m 0644 target/de-latin1.bmap rootfs/etc/
 sudo chown -R root:root rootfs
 
 echo "6. Rootfs image unmounten"
