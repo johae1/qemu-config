@@ -55,6 +55,8 @@ scripts/config --enable CONFIG_NETFILTER               # Netfilter
 scripts/config --enable CONFIG_BRIDGE                  # Ethernet Bridging
 
 # ─── Netzwerkgerätetreiber ──────────────────────────────────────────────
+scripts/config --enable CONFIG_NETDEVICES              # Network device support
+scripts/config --enable CONFIG_ETHERNET                # Ethernet devices
 scripts/config --enable CONFIG_TUN                     # TUN/TAP
 scripts/config --enable CONFIG_NE2K_PCI                # NE2000 PCI
 
