@@ -37,5 +37,6 @@ cd "$BUSYBOX_DIR" || { echo "Fehler beim Verzeichniswechsel"; exit 1; }
 make allnoconfig || { echo "Fehler bei der Minimalkonfiguration von BusyBox"; exit 1; }
 
 cp ../../qemu-config/busybox.config .config
+cp -r ../../qemu-config/target/ ../
 
 echo "BusyBox $BUSYBOX_VERSION erfolgreich heruntergeladen, entpackt und konfiguriert!"
